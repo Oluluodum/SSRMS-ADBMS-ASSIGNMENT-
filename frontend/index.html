@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10233f">
+  <title>SSRMS | Secure Student Records</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <main class="login-layout">
+    <section class="login-card">
+      <a class="brand" href="/">SSRMS</a>
+      <p class="eyebrow">ZUT · BIT3360</p>
+      <h1>Student records, protected.</h1>
+      <p class="muted">Sign in to the Secure Student Records Management System.</p>
+      <form id="login-form">
+        <label>Email <input name="email" type="email" autocomplete="username" required></label>
+        <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
+        <p id="login-error" class="error" role="alert"></p>
+        <button class="button primary full" type="submit">Sign in</button>
+      </form>
+      <aside class="demo-box">
+        <strong>Demo accounts</strong>
+        <span>admin@ssrms.test · AdminDemo!2468</span>
+        <span>lecturer@ssrms.test · LecturerDemo!2468</span>
+        <span>viewer@ssrms.test · ViewerDemo!2468</span>
+        <small>Fictional seed credentials; change them before any public deployment.</small>
+      </aside>
+    </section>
+  </main>
+  <script type="module" src="/js/auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+{
+  "name": "secure-student-records",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BIT3360 database security demonstration application",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "node --watch backend/server.js",
+    "start": "node backend/server.js",
+    "prisma:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio",
+    "check": "node --check backend/server.js && node --check backend/routes/authRoutes.js && node --check backend/routes/studentRoutes.js && node --check backend/routes/auditRoutes.js && node --check backend/middleware/authenticate.js && node --check backend/middleware/authorize.js && node --check backend/controllers/authController.js && node --check backend/controllers/studentController.js && node --check backend/controllers/auditController.js && node --check backend/services/auditService.js && node --check prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.3",
+    "bcrypt": "6.0.0",
+    "cookie-parser": "1.4.7",
+    "dotenv": "16.6.1",
+    "express": "5.1.0",
+    "express-rate-limit": "8.7.5",
+    "helmet": "8.1.0",
+    "jsonwebtoken": "9.0.2",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "prisma": "6.19.3"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  }
+}
