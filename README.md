@@ -46,6 +46,7 @@ Run commands in `D:\ADBMS\ADBMS`.
    ```
 
 Open `http://localhost:3000`. Health check: `http://localhost:3000/api/health`.
+The authenticated workspace has Overview and Students sections; administrators also have an Audit log section. Use the sidebar links (or the overview quick links) to navigate. Lecturer and viewer dashboard summaries/actions adjust to their roles, and the API remains the permission authority.
 
 ## Demo accounts
 

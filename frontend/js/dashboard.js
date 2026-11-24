@@ -5,6 +5,7 @@ const form = document.querySelector('#student-form');
 const formError = document.querySelector('#form-error');
 let currentUser;
 let students = [];
+let currentPage = 'overview';
 
 async function api(url, options = {}) {
   const response = await fetch(url, {
@@ -90,22 +91,78 @@ async function removeStudent(student) {
 
 async function loadAudit() {
   const { logs } = await api('/api/audit-logs');
-  const auditRows = document.querySelector('#audit-rows');
-  auditRows.replaceChildren();
+  renderAuditRows(document.querySelector('#audit-rows'), logs, true);
+  renderAuditRows(document.querySelector('#recent-audit-rows'), logs.slice(0, 5), false);
+}
+
+function renderAuditRows(target, logs, includeRole) {
+  target.replaceChildren();
   for (const log of logs) {
     const tr = document.createElement('tr');
-    for (const value of [new Date(log.createdAt).toLocaleString(), log.user?.fullName ?? 'System', log.action, log.entityId ?? '—']) {
+    const values = [
+      new Date(log.createdAt).toLocaleString(),
+      log.user?.fullName ?? 'System',
+      ...(includeRole ? [log.user?.role?.replace('_', ' ') ?? '—'] : []),
+      log.action,
+      ...(includeRole ? [log.entity] : []),
+      log.entityId ?? '—'
+    ];
+    for (const value of values) {
       const td = document.createElement('td');
       td.textContent = value;
       tr.append(td);
     }
-    auditRows.append(tr);
+    target.append(tr);
+  }
+  if (!logs.length) {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = includeRole ? 6 : 5;
+    td.textContent = 'No activity has been recorded yet.';
+    tr.append(td);
+    target.append(tr);
+  }
+}
+
+function navigateTo(page) {
+  const allowedPages = ['overview', 'students', 'audit'];
+  const requestedPage = allowedPages.includes(page) ? page : 'overview';
+  if (requestedPage === 'audit' && currentUser.role !== 'ADMINISTRATOR') {
+    window.location.hash = 'overview';
+    notice.textContent = 'The audit log is available to administrators only.';
+    return;
+  }
+
+  currentPage = requestedPage;
+  document.querySelectorAll('.page-view').forEach((view) => {
+    view.classList.toggle('hidden', view.id !== `page-${currentPage}`);
+  });
+  document.querySelectorAll('.nav-link').forEach((link) => {
+    const active = link.dataset.page === currentPage;
+    link.classList.toggle('active', active);
+    if (active) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+  });
+
+  const pageTitles = { overview: 'Overview', students: 'Students', audit: 'Audit log' };
+  document.title = `${pageTitles[currentPage]} | SSRMS`;
+  if (currentPage === 'students') {
+    loadStudents(document.querySelector('#search').value)
+      .catch((error) => { notice.textContent = error.message; });
+  } else if (currentPage === 'audit') {
+    document.querySelector('#audit-notice').textContent = '';
+    loadAudit().catch((error) => {
+      document.querySelector('#audit-notice').textContent = error.message;
+    });
   }
 }
 
 document.querySelector('#add-student').addEventListener('click', () => openForm());
 document.querySelector('#search').addEventListener('input', (event) => {
   loadStudents(event.target.value).catch((error) => { notice.textContent = error.message; });
+});
+window.addEventListener('hashchange', () => {
+  navigateTo(window.location.hash.slice(1) || 'overview');
 });
 for (const id of ['close-dialog', 'cancel-dialog']) {
   document.querySelector(`#${id}`).addEventListener('click', () => dialog.close());
@@ -147,12 +204,23 @@ try {
   ({ user: currentUser } = await api('/api/auth/me'));
   document.querySelector('#current-user').textContent = currentUser.fullName;
   document.querySelector('#role-badge').textContent = currentUser.role.replace('_', ' ');
+  document.querySelector('#welcome-user').textContent = currentUser.fullName.split(' ')[0];
+  document.querySelector('#overview-role').textContent = currentUser.role.replace('_', ' ');
+  const actionSummary = {
+    ADMINISTRATOR: ['Manage all records', 'Create, edit, delete students, and review audit activity'],
+    LECTURER: ['Update grades', 'View student records and update grades only'],
+    VIEWER: ['Read-only access', 'Search and view student records']
+  };
+  document.querySelector('#action-summary').textContent = actionSummary[currentUser.role][0];
+  document.querySelector('#action-description').textContent = actionSummary[currentUser.role][1];
   if (currentUser.role === 'ADMINISTRATOR') {
     document.querySelector('#add-student').classList.remove('hidden');
-    document.querySelector('#audit-panel').classList.remove('hidden');
+    document.querySelectorAll('[data-admin-only]').forEach((element) => element.classList.remove('hidden'));
+    document.querySelector('#recent-activity').classList.remove('hidden');
     await loadAudit();
   }
   await loadStudents();
+  navigateTo(window.location.hash.slice(1) || 'overview');
 } catch (error) {
-  notice.textContent = error.message;
+  if (error.message !== 'Please sign in again.') notice.textContent = error.message;
 }
